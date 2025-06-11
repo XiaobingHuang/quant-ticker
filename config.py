@@ -28,6 +28,14 @@ IEX_API_KEY = ""  # optional
 BINANCE_REST_ENDPOINT = "https://api.binance.com/api/v3"
 BINANCE_WS_ENDPOINT = "wss://stream.binance.com:9443"
 
+COINBASE_WS_ENDPOINT = "wss://ws-feed.exchange.coinbase.com"
+COINBASE_SYMBOLS = [
+    "BTC-USD",
+    "ETH-USD",
+    "SOL-USD"
+]
+
+
 # Reconnection settings
 MAX_RETRIES = 5
 RETRY_DELAY = 3  # seconds
