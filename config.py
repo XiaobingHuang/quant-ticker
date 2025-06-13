@@ -12,7 +12,7 @@ FETCH_INTERVAL = 1  # in seconds
 AGGREGATION_INTERVAL = "1min"  # used for OHLCV aggregation
 
 # Output settings
-OUTPUT_MODE = "csv"  # options: "csv", "sqlite"
+OUTPUT_MODE = "clickhouse"  # options: "csv", "sqlite", "clickhouse"
 OUTPUT_DIR = "data/"  # where to save logs or database
 
 # SQLite file name

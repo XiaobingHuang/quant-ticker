@@ -29,13 +29,12 @@ async def fetch_coinbase_stream(symbols, writer, shutdown_flag):
 
                     if data.get("type") == "ticker":
                         tick = {
-                            "timestamp": datetime.utcnow().isoformat(),
+                            "timestamp": datetime.utcnow(),
                             "symbol": data["product_id"],
                             "price": float(data["price"]),
                             "volume": float(data.get("last_size", 0.0))
                         }
                         await writer.write(tick)
-
                 except asyncio.TimeoutError:
                     logger.warning("Timeout — waiting for data...")
                 except Exception as e:
