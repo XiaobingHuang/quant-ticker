@@ -1,37 +1,45 @@
+import os
+import logging
 from clickhouse_driver import Client
 import asyncio
 
 class ClickHouseWriter:
     def __init__(
         self,
-        host="localhost",  # Use this if running Python outside Docker on macOS
+        host=None,
         port=9000,
-        database="default",  # ❗ this database doesn't exist yet
+        database="market",
         table="coinbase_ticks",
         batch_size=100,
         user="default",
         password=""
     ):
+        # Fallback order: arg > env var > inside Docker use service name 'clickhouse' > else localhost
+        self.host = (
+            host or
+            os.getenv("CLICKHOUSE_HOST") or
+            ("clickhouse" if os.getenv("INSIDE_DOCKER") else "localhost")
+        )
+        self.port = port
+        self.database = database
+        self.table = table
+        self.batch_size = batch_size
+
+        logging.debug(f"Connecting to ClickHouse at {self.host}:{self.port}")
         self.client = Client(
-            host=host,
-            port=port,
+            host=self.host,
+            port=self.port,
             user=user,
             password=password,
             database=database
         )
-        self.table = table
-        self.batch_size = batch_size
         self.buffer = []
-
         self._init_db()
 
     def _init_db(self):
+        self.client.execute(f"CREATE DATABASE IF NOT EXISTS {self.database};")
         self.client.execute(f"""
-            CREATE DATABASE IF NOT EXISTS market;
-        """)
-
-        self.client.execute(f"""
-            CREATE TABLE IF NOT EXISTS market.{self.table} (
+            CREATE TABLE IF NOT EXISTS {self.database}.{self.table} (
                 timestamp DateTime64(3),
                 symbol String,
                 price Float64,
@@ -47,14 +55,13 @@ class ClickHouseWriter:
             tick["price"],
             tick["volume"]
         ))
-
         if len(self.buffer) >= self.batch_size:
             self.flush()
 
     def flush(self):
         if self.buffer:
             self.client.execute(
-                f"INSERT INTO market.{self.table} (timestamp, symbol, price, volume) VALUES",
+                f"INSERT INTO {self.database}.{self.table} (timestamp, symbol, price, volume) VALUES",
                 self.buffer
             )
             self.buffer = []
